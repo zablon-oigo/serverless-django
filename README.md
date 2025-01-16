@@ -1,1 +1,1 @@
-# serverless-django
+# Serverless Django with Zappa on AWS Lambda
