@@ -6,7 +6,7 @@ Zappa is a python framework used for deploying python applications onto AWS-Lamb
 Clone the project
 
 ```bash
-  git clone [https://link-to-project](https://github.com/zablon-oigo/serverless-django.git
+  git clone https://github.com/zablon-oigo/serverless-django.git
 ```
 
 Go to the project directory
