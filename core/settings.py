@@ -10,9 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
-from pathlib import Path
-from decouple import config
 from datetime import timedelta
+from pathlib import Path
+
+from decouple import config
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
@@ -22,12 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG",cast=bool)
+DEBUG = config("DEBUG", cast=bool)
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS").split(",")
 
-
-# Application definition
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
+    "django_filters",
     "account.apps.AccountConfig",
     "app.apps.AppConfig",
 ]
@@ -79,20 +81,47 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 DATABASES = {
     "default": {
-        'ENGINE':config("SQL_DATABASE_ENGINE"),
-        'NAME':config("SQL_NAME"),
-        'USER':config("SQL_USER"),
-        'PASSWORD':config("SQL_PASSWORD"),
-        'HOST':config("SQL_HOST"),
-        'PORT':config("SQL_PORT"),
+        "ENGINE": config("SQL_DATABASE_ENGINE"),
+        "NAME": config("SQL_NAME"),
+        "USER": config("SQL_USER"),
+        "PASSWORD": config("SQL_PASSWORD"),
+        "HOST": config("SQL_HOST"),
+        "PORT": config("SQL_PORT"),
     }
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "app.custompagination.LimitOffsetPaginationUpperBound",
+    "PAGE_SIZE": 5,
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "5/hour",
+        "user": "20/hour",
+        "categories": "20/hour",
+        "pics": "15/hour",
+    },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
+
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Pics API Project",
+    "DESCRIPTION": "A sample photos API",
+    "VERSION": "1.0.0",
+}
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
@@ -107,7 +136,7 @@ SIMPLE_JWT = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  # noqa
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -142,16 +171,23 @@ WHITELISTED_IMAGE_TYPES = {
 }
 UPLOAD_FILE_MAX_SIZE = 2097152
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-MEDIA_URL="media/"
-MEDIA_ROOT=os.path.join(BASE_DIR,"media")
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
 EMAIL_HOST_USER = config("EMAIL_USER")
-EMAIL_HOST_PASSWORD = config("EMAIL_PASSWORD")
-EMAIL_PORT = config("EMAIL_PORT",cast=int)
+EMAIL_PORT = config("EMAIL_PORT", cast=int)
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
-SITE_NAME =config("SITE_NAME")
+SITE_NAME = config("SITE_NAME")
+EMAIL_BACKEND = "django_ses.SESBackend"
+AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
+CELERY_BROKER_URL = config("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+REDIS_HOST = config("REDIS_HOST")
+REDIS_PORT = config("REDIS_PORT")
+REDIS_DB = config("REDIS_DB")
