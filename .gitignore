@@ -4,3 +4,5 @@ __pycache__
 db.sqlite3
 static/
 media/
+.pytest_cache/
+.ruff_cache/
