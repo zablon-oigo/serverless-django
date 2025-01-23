@@ -6,6 +6,7 @@ from .models import Profile
 
 User = get_user_model()
 
+
 @receiver(post_save, sender=User)
 def manage_user_profile(sender, instance, created, **kwargs):
     if instance.is_email_verified:
