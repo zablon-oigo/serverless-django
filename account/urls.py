@@ -11,7 +11,7 @@ from .views import (
     SetNewPassword,
     UserProfileListView,
     UserProfileUpdateView,
-    VerifyOTPView
+    VerifyOTPView,
 )
 
 app_name = "account"
