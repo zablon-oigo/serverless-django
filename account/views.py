@@ -1,42 +1,52 @@
 from datetime import timedelta
+
 import pyotp
-from rest_framework.response import Response
-from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.encoding import DjangoUnicodeDecodeError, smart_str
 from django.utils.http import urlsafe_base64_decode
+from rest_framework import status
+from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+from .models import Profile
+from .permission import IsCurrentUserOwnerOrReadOnly
 from .serializers import (
     LoginSerializer,
     LogoutSerializer,
     OTPSerializer,
     PasswordResetRequestSerializer,
+    RegisterUserSerializer,
     SetNewPasswordSerializer,
     UserProfileSerializer,
-    RegisterUserSerializer
 )
-from rest_framework import status
-from .models import Profile
-from .utils import send_code_to_user
-from django.contrib.auth import get_user_model
-User=get_user_model()
+from .tasks import send_code_to_user
+
+User = get_user_model()
+
+
 class UserProfileListView(GenericAPIView):
     queryset = Profile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes=[IsAuthenticated]
+    permission_classes = [IsCurrentUserOwnerOrReadOnly, IsAuthenticated]
 
     def get(self, request):
         user_profiles = self.get_queryset()
         serializer = self.get_serializer(user_profiles, many=True)
-        return Response({"message":"Profile List","data":serializer.data}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": "Profile List", "data": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+
 
 class UserProfileUpdateView(GenericAPIView):
     serializer_class = UserProfileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCurrentUserOwnerOrReadOnly, IsAuthenticated]
 
     def get_object(self):
         user = self.request.user
@@ -60,9 +70,13 @@ class UserProfileUpdateView(GenericAPIView):
         serializer = self.get_serializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message":"Profile updated Successfully","data":serializer.data}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Profile updated Successfully", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class RegisterUserView(GenericAPIView):
     serializer_class = RegisterUserSerializer
 
@@ -104,7 +118,7 @@ class LogoutUserView(GenericAPIView):
             return Response(
                 {"message", "Logout was successful"}, status=status.HTTP_200_OK
             )
-        
+
 
 class VerifyOTPView(GenericAPIView):
     serializer_class = OTPSerializer
